@@ -46,6 +46,11 @@ void main() {
       // TODO
     });
 
+    // SystemConfigMetadataDto metadata
+    test('to test the property `metadata`', () async {
+      // TODO
+    });
+
     // SystemConfigNewVersionCheckDto newVersionCheck
     test('to test the property `newVersionCheck`', () async {
       // TODO

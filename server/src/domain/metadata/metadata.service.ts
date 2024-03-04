@@ -1,4 +1,4 @@
-import { AssetEntity, AssetType, ExifEntity } from '@app/infra/entities';
+import { AssetEntity, AssetType, ExifEntity, PersonEntity } from '@app/infra/entities';
 import { ImmichLogger } from '@app/infra/logger';
 import { Inject, Injectable } from '@nestjs/common';
 import { ExifDateTime, Tags } from 'exiftool-vendored';
@@ -12,6 +12,8 @@ import { IBaseJob, IEntityJob, ISidecarWriteJob, JOBS_ASSET_PAGINATION_SIZE, Job
 import {
   ClientEvent,
   DatabaseLock,
+  DetectFaceResult,
+  BoundingBox,
   ExifDuration,
   IAlbumRepository,
   IAssetRepository,
@@ -31,6 +33,8 @@ import {
 } from '../repositories';
 import { StorageCore } from '../storage';
 import { FeatureFlag, SystemConfigCore } from '../system-config';
+import { SearchPeopleDto } from '../search/dto';
+import { PersonResponseDto } from '../person';
 
 /** look for a date from these tags (in order) */
 const EXIF_DATE_TAGS: Array<keyof Tags> = [
@@ -109,7 +113,7 @@ export class MetadataService {
     @Inject(IMediaRepository) private mediaRepository: IMediaRepository,
     @Inject(IMetadataRepository) private repository: IMetadataRepository,
     @Inject(IMoveRepository) moveRepository: IMoveRepository,
-    @Inject(IPersonRepository) personRepository: IPersonRepository,
+    @Inject(IPersonRepository) private personRepository: IPersonRepository,
     @Inject(IStorageRepository) private storageRepository: IStorageRepository,
     @Inject(ISystemConfigRepository) configRepository: ISystemConfigRepository,
   ) {
@@ -252,6 +256,16 @@ export class MetadataService {
       fileCreatedAt: exifData.dateTimeOriginal ?? undefined,
     });
 
+    await this.assetRepository.upsertJobStatus({
+      assetId: asset.id,
+      metadataExtractedAt: new Date(),
+    });
+
+    if (await this.configCore.hasFeature(FeatureFlag.IMPORT_FACES)) {
+      await this.applyTaggedFaces(asset, tags);
+    }
+
+
     return true;
   }
 
@@ -346,6 +360,109 @@ export class MetadataService {
         error?.stack,
       );
     }
+  }
+
+  async searchPerson(ownerId: AssetEntity["ownerId"], dto: SearchPeopleDto): Promise<PersonResponseDto[]> {
+    return this.personRepository.getByName(ownerId, dto.name, { withHidden: dto.withHidden });
+  }
+
+  private async applyTaggedFaces(asset: AssetEntity, tags: ImmichTags) {
+    this.logger.debug(`Starting faces extraction from tags (${asset.id})`);
+
+    const metadataEmbedding = new Array<number>(512).fill(0)
+    let faceSet = new Set();
+
+    if (!tags.RegionInfo) {
+      return true;
+    }
+
+    interface MetadataFaceResult {
+      Name?: string;
+      Type?: string;
+      Region: DetectFaceResult;
+    }
+
+    function toPixels(region: DetectFaceResult, unit: string): DetectFaceResult {
+      var pixelRegion: DetectFaceResult = region;
+      if (unit.toLowerCase() == "normalized") {
+        pixelRegion.boundingBox.x1 = Math.floor(region.boundingBox.x1 * region.imageWidth)
+        pixelRegion.boundingBox.x2 = Math.floor(region.boundingBox.x2 * region.imageWidth)
+        pixelRegion.boundingBox.y1 = Math.floor(region.boundingBox.y1 * region.imageHeight)
+        pixelRegion.boundingBox.y2 = Math.floor(region.boundingBox.y2 * region.imageHeight)
+      }
+      return pixelRegion
+    }
+
+    for (const region of tags.RegionInfo?.RegionList) {
+      let faceResult: MetadataFaceResult = {
+        Name: region.Name,
+        Type: region.Type,
+        Region: toPixels({
+          imageWidth: tags.RegionInfo?.AppliedToDimensions?.W,
+          imageHeight: tags.RegionInfo?.AppliedToDimensions?.H,
+          boundingBox: {
+            x1: region.Area.X - (region.Area.W / 2),
+            y1: region.Area.Y - (region.Area.H / 2),
+            x2: region.Area.X + (region.Area.W / 2),
+            y2: region.Area.Y + (region.Area.H / 2),
+          } as BoundingBox,
+          score: 1,
+          embedding: metadataEmbedding,
+        }, region.Area.Unit)
+      };
+
+      faceSet.add(faceResult);
+    }
+
+    const faces = [...faceSet] as MetadataFaceResult[];
+
+    this.logger.debug(`${faces.length} faces detected in ${asset.resizePath}`);
+
+    // cleanup faces imported from metadata so we can update them if we're re-reading to avoid duplications
+    await this.personRepository.deleteFaceFromAsset(asset.id, metadataEmbedding);
+
+    for (const face of faces) {
+      const name = face.Name || ""
+      const matches = await this.personRepository.getByName(asset.ownerId, name, { withHidden: true })
+
+      this.logger.verbose(`${matches.length} persons found for name=${name}: ${matches}`);
+
+      let personId = matches[0]?.id || null;
+      let newPerson: PersonEntity | null = null;
+
+      if (!personId) {
+        this.logger.debug('No matches, creating a new person.');
+        newPerson = await this.personRepository.create({ ownerId: asset.ownerId, name: name });
+        if (!newPerson) {
+          this.logger.error(`Something went wrong creating person=${name}`)
+        }
+        personId = newPerson.id;
+      }
+
+      const newFace = await this.personRepository.createFace({
+        assetId: asset.id,
+        personId: personId,
+        embedding: face.Region.embedding,
+        imageHeight: face.Region.imageHeight,
+        imageWidth: face.Region.imageWidth,
+        boundingBoxX1: face.Region.boundingBox.x1,
+        boundingBoxX2: face.Region.boundingBox.x2,
+        boundingBoxY1: face.Region.boundingBox.y1,
+        boundingBoxY2: face.Region.boundingBox.y2,
+      });
+
+      if (newPerson) {
+        await this.personRepository.update({ id: personId, faceAssetId: newFace.id });
+        await this.jobRepository.queue({ name: JobName.GENERATE_PERSON_THUMBNAIL, data: { id: newPerson.id } });
+      }
+    }
+
+    await this.assetRepository.upsertJobStatus({
+      assetId: asset.id,
+      facesRecognizedAt: new Date(),
+    });
+
+    return true;
   }
 
   private async applyMotionPhotos(asset: AssetEntity, tags: ImmichTags) {
@@ -457,7 +574,7 @@ export class MetadataService {
       fileSizeInByte: stats.size,
       fNumber: validate(tags.FNumber),
       focalLength: validate(tags.FocalLength),
-      fps: validate(tags.VideoFrameRate),
+      fps: validate(parseFloat(tags.VideoFrameRate!)),
       iso: validate(tags.ISO),
       latitude: validate(tags.GPSLatitude),
       lensModel: tags.LensModel ?? null,

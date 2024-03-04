@@ -19,6 +19,7 @@ class SystemConfigDto {
     required this.logging,
     required this.machineLearning,
     required this.map,
+    required this.metadata,
     required this.newVersionCheck,
     required this.oauth,
     required this.passwordLogin,
@@ -41,6 +42,8 @@ class SystemConfigDto {
   SystemConfigMachineLearningDto machineLearning;
 
   SystemConfigMapDto map;
+
+  SystemConfigMetadataDto metadata;
 
   SystemConfigNewVersionCheckDto newVersionCheck;
 
@@ -68,6 +71,7 @@ class SystemConfigDto {
      other.logging == logging &&
      other.machineLearning == machineLearning &&
      other.map == map &&
+     other.metadata == metadata &&
      other.newVersionCheck == newVersionCheck &&
      other.oauth == oauth &&
      other.passwordLogin == passwordLogin &&
@@ -87,6 +91,7 @@ class SystemConfigDto {
     (logging.hashCode) +
     (machineLearning.hashCode) +
     (map.hashCode) +
+    (metadata.hashCode) +
     (newVersionCheck.hashCode) +
     (oauth.hashCode) +
     (passwordLogin.hashCode) +
@@ -98,7 +103,7 @@ class SystemConfigDto {
     (trash.hashCode);
 
   @override
-  String toString() => 'SystemConfigDto[ffmpeg=$ffmpeg, job=$job, library_=$library_, logging=$logging, machineLearning=$machineLearning, map=$map, newVersionCheck=$newVersionCheck, oauth=$oauth, passwordLogin=$passwordLogin, reverseGeocoding=$reverseGeocoding, server=$server, storageTemplate=$storageTemplate, theme=$theme, thumbnail=$thumbnail, trash=$trash]';
+  String toString() => 'SystemConfigDto[ffmpeg=$ffmpeg, job=$job, library_=$library_, logging=$logging, machineLearning=$machineLearning, map=$map, metadata=$metadata, newVersionCheck=$newVersionCheck, oauth=$oauth, passwordLogin=$passwordLogin, reverseGeocoding=$reverseGeocoding, server=$server, storageTemplate=$storageTemplate, theme=$theme, thumbnail=$thumbnail, trash=$trash]';
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -108,6 +113,7 @@ class SystemConfigDto {
       json[r'logging'] = this.logging;
       json[r'machineLearning'] = this.machineLearning;
       json[r'map'] = this.map;
+      json[r'metadata'] = this.metadata;
       json[r'newVersionCheck'] = this.newVersionCheck;
       json[r'oauth'] = this.oauth;
       json[r'passwordLogin'] = this.passwordLogin;
@@ -134,6 +140,7 @@ class SystemConfigDto {
         logging: SystemConfigLoggingDto.fromJson(json[r'logging'])!,
         machineLearning: SystemConfigMachineLearningDto.fromJson(json[r'machineLearning'])!,
         map: SystemConfigMapDto.fromJson(json[r'map'])!,
+        metadata: SystemConfigMetadataDto.fromJson(json[r'metadata'])!,
         newVersionCheck: SystemConfigNewVersionCheckDto.fromJson(json[r'newVersionCheck'])!,
         oauth: SystemConfigOAuthDto.fromJson(json[r'oauth'])!,
         passwordLogin: SystemConfigPasswordLoginDto.fromJson(json[r'passwordLogin'])!,
@@ -196,6 +203,7 @@ class SystemConfigDto {
     'logging',
     'machineLearning',
     'map',
+    'metadata',
     'newVersionCheck',
     'oauth',
     'passwordLogin',

@@ -60,7 +60,7 @@
     [JobName.MetadataExtraction]: {
       icon: mdiTable,
       title: api.getJobName(JobName.MetadataExtraction),
-      subtitle: 'Extract metadata information from each asset, such as GPS and resolution',
+      subtitle: 'Extract metadata information from each asset, such as GPS' + ($featureFlags.importFaces ? ', faces' : '') + ' and resolution',
     },
     [JobName.Library]: {
       icon: mdiLibraryShelves,

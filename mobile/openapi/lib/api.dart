@@ -14,7 +14,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
@@ -173,6 +172,7 @@ part 'model/system_config_library_scan_dto.dart';
 part 'model/system_config_logging_dto.dart';
 part 'model/system_config_machine_learning_dto.dart';
 part 'model/system_config_map_dto.dart';
+part 'model/system_config_metadata_dto.dart';
 part 'model/system_config_new_version_check_dto.dart';
 part 'model/system_config_o_auth_dto.dart';
 part 'model/system_config_password_login_dto.dart';

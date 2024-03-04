@@ -145,6 +145,7 @@ doc/SystemConfigLibraryScanDto.md
 doc/SystemConfigLoggingDto.md
 doc/SystemConfigMachineLearningDto.md
 doc/SystemConfigMapDto.md
+doc/SystemConfigMetadataDto.md
 doc/SystemConfigNewVersionCheckDto.md
 doc/SystemConfigOAuthDto.md
 doc/SystemConfigPasswordLoginDto.md
@@ -332,6 +333,7 @@ lib/model/system_config_library_scan_dto.dart
 lib/model/system_config_logging_dto.dart
 lib/model/system_config_machine_learning_dto.dart
 lib/model/system_config_map_dto.dart
+lib/model/system_config_metadata_dto.dart
 lib/model/system_config_new_version_check_dto.dart
 lib/model/system_config_o_auth_dto.dart
 lib/model/system_config_password_login_dto.dart
@@ -506,6 +508,7 @@ test/system_config_library_scan_dto_test.dart
 test/system_config_logging_dto_test.dart
 test/system_config_machine_learning_dto_test.dart
 test/system_config_map_dto_test.dart
+test/system_config_metadata_dto_test.dart
 test/system_config_new_version_check_dto_test.dart
 test/system_config_o_auth_dto_test.dart
 test/system_config_password_login_dto_test.dart

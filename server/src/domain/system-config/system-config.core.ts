@@ -61,6 +61,9 @@ export const defaults = Object.freeze<SystemConfig>({
     enabled: true,
     level: LogLevel.LOG,
   },
+  metadata: {
+    importFaces: !(process.env.IMMICH_METADATA_IMPORT_FACES_ENABLED !== 'false'),
+  },
   machineLearning: {
     enabled: process.env.IMMICH_MACHINE_LEARNING_ENABLED !== 'false',
     url: process.env.IMMICH_MACHINE_LEARNING_URL || 'http://immich-machine-learning:3003',
@@ -134,6 +137,7 @@ export const defaults = Object.freeze<SystemConfig>({
 });
 
 export enum FeatureFlag {
+  IMPORT_FACES = 'importFaces',
   CLIP_ENCODE = 'clipEncode',
   FACIAL_RECOGNITION = 'facialRecognition',
   MAP = 'map',
@@ -176,6 +180,8 @@ export class SystemConfigCore {
     const hasFeature = await this.hasFeature(feature);
     if (!hasFeature) {
       switch (feature) {
+        case FeatureFlag.IMPORT_FACES:
+          throw new BadRequestException('Import faces from metadata is not enabled');
         case FeatureFlag.CLIP_ENCODE:
           throw new BadRequestException('Clip encoding is not enabled');
         case FeatureFlag.FACIAL_RECOGNITION:
@@ -206,6 +212,7 @@ export class SystemConfigCore {
     const mlEnabled = config.machineLearning.enabled;
 
     return {
+      [FeatureFlag.IMPORT_FACES]: config.metadata.importFaces,
       [FeatureFlag.CLIP_ENCODE]: mlEnabled && config.machineLearning.clip.enabled,
       [FeatureFlag.FACIAL_RECOGNITION]: mlEnabled && config.machineLearning.facialRecognition.enabled,
       [FeatureFlag.MAP]: config.map.enabled,

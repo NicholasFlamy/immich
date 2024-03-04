@@ -7,7 +7,7 @@ import {
   UpdateFacesData,
 } from '@app/domain';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
 import { AssetEntity, AssetFaceEntity, PersonEntity } from '../entities';
 import { DummyValue, GenerateSql } from '../infra.util';
 import { Chunked, ChunkedArray, asVector } from '../infra.utils';
@@ -246,5 +246,14 @@ export class PersonRepository implements IPersonRepository {
   @GenerateSql({ params: [DummyValue.UUID] })
   async getRandomFace(personId: string): Promise<AssetFaceEntity | null> {
     return this.assetFaceRepository.findOneBy({ personId });
+  }
+
+  async deleteFaceFromAsset(assetId: string, embedding: number[]): Promise<void> {
+    const results = await this.assetFaceRepository
+      .createQueryBuilder('face')
+      .delete()
+      .where("assetId = :assetId", { assetId: assetId })
+      .andWhere("embedding = :embedding", { embedding: asVector(embedding) })
+      .execute();
   }
 }

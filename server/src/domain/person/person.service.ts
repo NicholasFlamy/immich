@@ -254,7 +254,7 @@ export class PersonService {
     if (!person) {
       return false;
     }
-
+// TODO: delete only persons not imported from metadata (embedded != [0, 0, 0, ...] )
     try {
       await this.repository.delete(person);
       await this.storageRepository.unlink(person.thumbnailPath);
@@ -386,10 +386,11 @@ export class PersonService {
   }
 
   async handleGeneratePersonThumbnail(data: IEntityJob) {
-    const { machineLearning, thumbnail } = await this.configCore.getConfig();
-    if (!machineLearning.enabled || !machineLearning.facialRecognition.enabled) {
+    const { machineLearning, thumbnail, metadata } = await this.configCore.getConfig();
+    if (!(machineLearning.enabled && machineLearning.facialRecognition.enabled) && !metadata.importFaces) {
       return true;
     }
+    this.logger.verbose(`handleGeneratePersonThumbnail`);
 
     const person = await this.repository.getById(data.id);
     if (!person?.faceAssetId) {

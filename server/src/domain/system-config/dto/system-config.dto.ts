@@ -5,6 +5,7 @@ import { SystemConfigFFmpegDto } from './system-config-ffmpeg.dto';
 import { SystemConfigJobDto } from './system-config-job.dto';
 import { SystemConfigLibraryDto } from './system-config-library.dto';
 import { SystemConfigLoggingDto } from './system-config-logging.dto';
+import { SystemConfigMetadataDto } from './system-config-metadata.dto';
 import { SystemConfigMachineLearningDto } from './system-config-machine-learning.dto';
 import { SystemConfigMapDto } from './system-config-map.dto';
 import { SystemConfigNewVersionCheckDto } from './system-config-new-version-check.dto';
@@ -27,6 +28,11 @@ export class SystemConfigDto implements SystemConfig {
   @ValidateNested()
   @IsObject()
   logging!: SystemConfigLoggingDto;
+
+  @Type(() => SystemConfigMetadataDto)
+  @ValidateNested()
+  @IsObject()
+  metadata!: SystemConfigMetadataDto;
 
   @Type(() => SystemConfigMachineLearningDto)
   @ValidateNested()

@@ -50,4 +50,5 @@ export interface IPersonRepository {
   reassignFace(assetFaceId: string, newPersonId: string): Promise<number>;
   getFaceById(id: string): Promise<AssetFaceEntity>;
   getFaceByIdWithAssets(id: string): Promise<AssetFaceEntity | null>;
+  deleteFaceFromAsset(assetId: string, embedding: number[]): Promise<void>;
 }

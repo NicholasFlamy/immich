@@ -50,6 +50,8 @@ export enum SystemConfigKey {
   LOGGING_ENABLED = 'logging.enabled',
   LOGGING_LEVEL = 'logging.level',
 
+  METADATA_IMPORT_FACES_ENABLED = "metadata.importFaces",
+
   MACHINE_LEARNING_ENABLED = 'machineLearning.enabled',
   MACHINE_LEARNING_URL = 'machineLearning.url',
 
@@ -180,6 +182,9 @@ export interface SystemConfig {
   logging: {
     enabled: boolean;
     level: LogLevel;
+  };
+  metadata: {
+    importFaces: boolean;
   };
   machineLearning: {
     enabled: boolean;

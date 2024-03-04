@@ -31,6 +31,11 @@ void main() {
       // TODO
     });
 
+    // bool importFaces
+    test('to test the property `importFaces`', () async {
+      // TODO
+    });
+
     // bool map
     test('to test the property `map`', () async {
       // TODO
