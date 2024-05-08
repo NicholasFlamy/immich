@@ -7544,6 +7544,8 @@
         "properties": {
           "duplicateThreshold": {
             "format": "float",
+            "maximum": 0.1,
+            "minimum": 0.01,
             "type": "number"
           },
           "enabled": {
