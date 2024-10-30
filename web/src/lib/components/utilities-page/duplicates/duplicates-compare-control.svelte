@@ -16,17 +16,36 @@
 
   interface Props {
     assets: AssetResponseDto[];
-    onResolve: (duplicateAssetIds: string[], trashIds: string[]) => void;
+    isSynchronizeAlbumsActive: boolean;
+    isSynchronizeArchivesActive: boolean;
+    isSynchronizeFavoritesActive: boolean;
+    onResolve: (duplicateAssetIds: string[], trashIds: string[], selectedDataToSync: SelectedSyncData) => void;
     onStack: (assets: AssetResponseDto[]) => void;
   }
 
-  let { assets, onResolve, onStack }: Props = $props();
+  let {
+    assets,
+    isSynchronizeAlbumsActive,
+    isSynchronizeArchivesActive,
+    isSynchronizeFavoritesActive,
+    onResolve,
+    onStack,
+  }: Props = $props();
+
   const { isViewing: showAssetViewer, asset: viewingAsset, setAsset } = assetViewingStore;
   const getAssetIndex = (id: string) => assets.findIndex((asset) => asset.id === id);
 
   // eslint-disable-next-line svelte/no-unnecessary-state-wrap
   let selectedAssetIds = $state(new SvelteSet<string>());
   let trashCount = $derived(assets.length - selectedAssetIds.size);
+  export interface SelectedSyncData {
+    isArchived: boolean | null;
+    isFavorite: boolean | null;
+  }
+  let selectedSyncData: SelectedSyncData = $state({
+    isArchived: null,
+    isFavorite: null,
+  });
 
   onMount(() => {
     const suggestedAsset = suggestDuplicate(assets);
@@ -96,7 +115,7 @@
   const handleResolve = () => {
     const trashIds = assets.map((asset) => asset.id).filter((id) => !selectedAssetIds.has(id));
     const duplicateAssetIds = assets.map((asset) => asset.id);
-    onResolve(duplicateAssetIds, trashIds);
+    onResolve(duplicateAssetIds, trashIds, selectedSyncData);
   };
 
   const handleStack = () => {
@@ -118,7 +137,22 @@
 />
 
 <div class="pt-4 rounded-3xl border dark:border-2 border-gray-300 dark:border-gray-700 max-w-216 mx-auto mb-4">
-  <div class="flex flex-wrap gap-y-6 mb-4 px-6 w-full place-content-end justify-between">
+  <div class="flex flex-wrap gap-1 place-items-center place-content-center px-4 pt-4">
+    {#each assets as asset (asset.id)}
+      <DuplicateAsset
+        {asset}
+        {onSelectAsset}
+        bind:selectedSyncData
+        isSelected={selectedAssetIds.has(asset.id)}
+        onViewAsset={(asset) => setAsset(asset)}
+        {isSynchronizeAlbumsActive}
+        {isSynchronizeFavoritesActive}
+        {isSynchronizeArchivesActive}
+      />
+    {/each}
+  </div>
+
+  <div class="flex flex-wrap gap-y-6 mt-10 mb-4 px-6 w-full place-content-end justify-between">
     <!-- MARK ALL BUTTONS -->
     <div class="flex text-xs text-black">
       <Button class="rounded-s-full" size="small" color="primary" leadingIcon={mdiCheck} onclick={onSelectAll}

@@ -7,6 +7,8 @@
     notificationController,
     NotificationType,
   } from '$lib/components/shared-components/notification/notification';
+  import DuplicateOptions from '$lib/components/utilities-page/duplicates/duplicate-options.svelte';
+  import type { SelectedSyncData } from '$lib/components/utilities-page/duplicates/duplicates-compare-control.svelte';
   import DuplicatesCompareControl from '$lib/components/utilities-page/duplicates/duplicates-compare-control.svelte';
   import { AppRoute } from '$lib/constants';
   import DuplicatesInformationModal from '$lib/modals/DuplicatesInformationModal.svelte';
@@ -14,16 +16,17 @@
   import { assetViewingStore } from '$lib/stores/asset-viewing.store';
   import { locale } from '$lib/stores/preferences.store';
   import { featureFlags } from '$lib/stores/server-config.store';
-  import { stackAssets } from '$lib/utils/asset-utils';
+  import { addAssetsToAlbum, stackAssets } from '$lib/utils/asset-utils';
   import { suggestDuplicate } from '$lib/utils/duplicate-utils';
   import { handleError } from '$lib/utils/handle-error';
-  import type { AssetResponseDto } from '@immich/sdk';
-  import { deleteAssets, deleteDuplicates, updateAssets } from '@immich/sdk';
+  import type { AlbumResponseDto, AssetBulkUpdateDto, AssetResponseDto } from '@immich/sdk';
+  import { deleteAssets, deleteDuplicates, getAllAlbums, updateAssets } from '@immich/sdk';
   import { Button, HStack, IconButton, modalManager, Text } from '@immich/ui';
   import {
     mdiCheckOutline,
     mdiChevronLeft,
     mdiChevronRight,
+    mdiCogOutline,
     mdiInformationOutline,
     mdiKeyboard,
     mdiPageFirst,
@@ -35,9 +38,21 @@
 
   interface Props {
     data: PageData;
+    isShowKeyboardShortcut?: boolean;
+    isShowDuplicateInfo?: boolean;
+    isShowOptions?: boolean;
   }
 
-  let { data = $bindable() }: Props = $props();
+  let {
+    data = $bindable(),
+    isShowKeyboardShortcut = $bindable(false),
+    isShowDuplicateInfo = $bindable(false),
+    isShowOptions = $bindable(false),
+  }: Props = $props();
+
+  let isSynchronizeAlbumsActive = $state(true);
+  let isSynchronizeFavoritesActive = $state(true);
+  let isSynchronizeArchivesActive = $state(true);
 
   interface Shortcuts {
     general: ExplainedShortcut[];
@@ -104,11 +119,29 @@
     });
   };
 
-  const handleResolve = async (duplicateId: string, duplicateAssetIds: string[], trashIds: string[]) => {
+  const handleResolve = async (
+    duplicateId: string,
+    duplicateAssetIds: string[],
+    trashIds: string[],
+    selectedDataToSync: SelectedSyncData,
+  ) => {
     return withConfirmation(
       async () => {
+        let assetBulkUpdate: AssetBulkUpdateDto = {
+          ids: duplicateAssetIds,
+          duplicateId: null,
+        };
+        if (isSynchronizeAlbumsActive) {
+          await synchronizeAlbums(duplicateAssetIds);
+        }
+        if (isSynchronizeArchivesActive) {
+          assetBulkUpdate.isArchived = selectedDataToSync.isArchived;
+        }
+        if (isSynchronizeFavoritesActive) {
+          assetBulkUpdate.isFavorite = selectedDataToSync.isFavorite;
+        }
         await deleteAssets({ assetBulkDeleteDto: { ids: trashIds, force: !$featureFlags.trash } });
-        await updateAssets({ assetBulkUpdateDto: { ids: duplicateAssetIds, duplicateId: null } });
+        await updateAssets({ assetBulkUpdateDto: assetBulkUpdate });
 
         duplicates = duplicates.filter((duplicate) => duplicate.duplicateId !== duplicateId);
 
@@ -118,6 +151,17 @@
       trashIds.length > 0 && !$featureFlags.trash ? $t('delete_duplicates_confirmation') : undefined,
       trashIds.length > 0 && !$featureFlags.trash ? $t('permanently_delete') : undefined,
     );
+  };
+
+  const synchronizeAlbums = async (assetIds: string[]) => {
+    const allAlbums: AlbumResponseDto[] = await Promise.all(
+      assetIds.map((assetId) => getAllAlbums({ assetId: assetId })),
+    );
+    const albumIds = [...new Set(allAlbums.flat().map((album) => album.id))];
+
+    albumIds.forEach((albumId) => {
+      addAssetsToAlbum(albumId, assetIds, false);
+    });
   };
 
   const handleStack = async (duplicateId: string, assets: AssetResponseDto[]) => {
@@ -254,6 +298,7 @@
         onclick={() => modalManager.show(ShortcutsModal, { shortcuts: duplicateShortcuts })}
         aria-label={$t('show_keyboard_shortcuts')}
       />
+      <CircleIconButton icon={mdiCogOutline} title={$t('options')} onclick={() => (isShowOptions = !isShowOptions)} />
     </HStack>
   {/snippet}
 
@@ -277,9 +322,12 @@
       {#key duplicates[duplicatesIndex].duplicateId}
         <DuplicatesCompareControl
           assets={duplicates[duplicatesIndex].assets}
-          onResolve={(duplicateAssetIds, trashIds) =>
-            handleResolve(duplicates[duplicatesIndex].duplicateId, duplicateAssetIds, trashIds)}
+          onResolve={(duplicateAssetIds, trashIds, selectedDataToSync) =>
+            handleResolve(duplicates[duplicatesIndex].duplicateId, duplicateAssetIds, trashIds, selectedDataToSync)}
           onStack={(assets) => handleStack(duplicates[duplicatesIndex].duplicateId, assets)}
+          {isSynchronizeAlbumsActive}
+          {isSynchronizeFavoritesActive}
+          {isSynchronizeArchivesActive}
         />
         <div class="max-w-216 mx-auto mb-16">
           <div class="flex flex-wrap gap-y-6 mb-4 px-6 w-full place-content-end justify-between items-center">
@@ -338,3 +386,22 @@
     {/if}
   </div>
 </UserPageLayout>
+
+{#if isShowOptions}
+  <DuplicateOptions
+    synchronizeAlbums={isSynchronizeAlbumsActive}
+    synchronizeFavorites={isSynchronizeFavoritesActive}
+    synchronizeArchives={isSynchronizeArchivesActive}
+    onClose={() => (isShowOptions = false)}
+    onToggleSyncAlbum={() => (isSynchronizeAlbumsActive = !isSynchronizeAlbumsActive)}
+    onToggleSyncFavorites={() => (isSynchronizeFavoritesActive = !isSynchronizeFavoritesActive)}
+    onToggleSyncArchives={() => (isSynchronizeArchivesActive = !isSynchronizeArchivesActive)}
+  />
+{/if}
+
+{#if isShowKeyboardShortcut}
+  <ShowShortcuts shortcuts={duplicateShortcuts} onClose={() => (isShowKeyboardShortcut = false)} />
+{/if}
+{#if isShowDuplicateInfo}
+  <DuplicatesModal onClose={() => (isShowDuplicateInfo = false)} />
+{/if}
