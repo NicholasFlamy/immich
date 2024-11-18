@@ -86,7 +86,7 @@ class OrtSession:
         provider_options = []
         for provider in self.providers:
             match provider:
-                case "CPUExecutionProvider":
+                case "CPUExecutionProvider" | "ROCMExecutionProvider":
                     options = {"arena_extend_strategy": "kSameAsRequested"}
                 case "CUDAExecutionProvider":
                     options = {"arena_extend_strategy": "kSameAsRequested", "device_id": settings.device_id}
