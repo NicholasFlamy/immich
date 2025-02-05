@@ -163,6 +163,12 @@ ThemeData getThemeData({
         ),
       ),
     ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        // Set the predictive back transitions for Android.
+        TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+      },
+    ),
   );
 }
 
