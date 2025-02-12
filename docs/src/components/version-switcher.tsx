@@ -8,7 +8,7 @@ export default function VersionSwitcher(): JSX.Element {
 
   const windowSize = useWindowSize();
 
-  const locationPathSearchHash = location.pathname + location.search + location.hash;
+  const [locationPathSearchHash, setLocation] = useState('/');
 
   useEffect(() => {
     async function getVersions() {
@@ -21,6 +21,8 @@ export default function VersionSwitcher(): JSX.Element {
         const response = await fetch(`${baseUrl}/archived-versions.json`);
 
         const archiveVersions = await response.json();
+
+        setLocation(location.pathname + location.search + location.hash);
 
         const allVersions = [
           { label: 'Next', url: 'https://main.preview.immich.app' },
