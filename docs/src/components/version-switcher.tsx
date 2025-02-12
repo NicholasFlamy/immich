@@ -8,6 +8,8 @@ export default function VersionSwitcher(): JSX.Element {
 
   const windowSize = useWindowSize();
 
+  const locationPathSearchHash = location.pathname + location.search + location.hash;
+
   useEffect(() => {
     async function getVersions() {
       try {
@@ -24,10 +26,13 @@ export default function VersionSwitcher(): JSX.Element {
           { label: 'Next', url: 'https://main.preview.immich.app' },
           { label: 'Latest', url: 'https://immich.app' },
           ...archiveVersions,
-        ];
+        ].map(({ label, url }) => ({
+          label,
+          url: new URL(url),
+        }));
         setVersions(allVersions);
 
-        const activeVersion = allVersions.find((version) => new URL(version.url).origin === window.location.origin);
+        const activeVersion = allVersions.find((version) => version.url.origin === window.location.origin);
         if (activeVersion) {
           setLabel(activeVersion.label);
         }
@@ -49,7 +54,7 @@ export default function VersionSwitcher(): JSX.Element {
         mobile={windowSize === 'mobile'}
         items={versions.map(({ label, url }) => ({
           label,
-          to: URL.parse(location.pathname + location.hash, url).href,
+          to: new URL(locationPathSearchHash, url).href,
           target: '_self',
         }))}
       />
