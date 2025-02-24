@@ -70,7 +70,7 @@ function CommunityGuide({ title, description, url }: CommunityGuidesProps): JSX.
       </div>
       <div className="flex">
         <Link
-          className="px-4 py-2 bg-immich-primary/10 dark:bg-gray-300 rounded-xl text-sm hover:no-underline text-immich-primary dark:text-immich-dark-bg font-semibold"
+          className="px-4 py-2 bg-immich-button dark:bg-gray-300 rounded-xl text-sm hover:no-underline text-immich-primary dark:text-immich-dark-bg font-semibold"
           to={url}
         >
           View Guide

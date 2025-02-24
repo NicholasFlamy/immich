@@ -14,6 +14,7 @@ module.exports = {
         'immich-bg': '#f9f8fb',
         'immich-fg': 'black',
         'immich-gray': '#F6F6F4',
+        'immich-button': '#e8e8f4',
 
         // Dark Theme
         'immich-dark-primary': '#adcbfa',

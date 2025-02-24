@@ -45,7 +45,7 @@ function HomepageHeader() {
           </Link>
 
           <Link
-            className="flex place-items-center place-content-center py-3 px-8 border bg-immich-primary/10 dark:bg-gray-300  rounded-xl hover:no-underline text-immich-primary dark:text-immich-dark-bg font-bold uppercase"
+            className="flex place-items-center place-content-center py-3 px-8 border bg-immich-button dark:bg-gray-300  rounded-xl hover:no-underline text-immich-primary dark:text-immich-dark-bg font-bold uppercase"
             to="https://demo.immich.app/"
           >
             Demo

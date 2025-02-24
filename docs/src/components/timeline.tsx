@@ -45,7 +45,7 @@ export function Timeline({ items }: Props): JSX.Element {
             <div className="z-10 flex items-center bg-immich-primary dark:bg-immich-dark-primary border-2 border-solid rounded-full dark:text-black text-white relative top-[50%] left-[-3px] translate-y-[-50%] translate-x-[-50%] w-8 h-8 shadow-lg ">
               {<Icon path={timelineIcon} size={1.25} />}
             </div>
-            <section className=" dark:bg-immich-dark-gray bg-immich-gray dark:border-0 border-gray-200 border border-solid rounded-2xl flex flex-row w-full gap-2 p-4 md:ml-4 my-2 hover:bg-immich-primary/10 dark:hover:bg-immich-dark-primary/10 transition-all">
+            <section className=" dark:bg-immich-dark-gray bg-immich-gray dark:border-0 border-gray-200 border border-solid rounded-2xl flex flex-row w-full gap-2 p-4 md:ml-4 my-2 hover:bg-immich-button dark:hover:bg-immich-dark-primary/10 transition-all">
               <div className="flex flex-col flex-grow justify-between gap-2">
                 <div className="flex gap-2 items-center">
                   {cardIcon === 'immich' ? (
