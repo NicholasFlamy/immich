@@ -109,6 +109,7 @@
     autoplay
     playsinline
     controls
+    controlslist="nodownload"
     class="h-full object-contain"
     use:swipe={() => ({})}
     onswipe={onSwipe}
