@@ -298,7 +298,15 @@
         onclick={() => modalManager.show(ShortcutsModal, { shortcuts: duplicateShortcuts })}
         aria-label={$t('show_keyboard_shortcuts')}
       />
-      <CircleIconButton icon={mdiCogOutline} title={$t('options')} onclick={() => (isShowOptions = !isShowOptions)} />
+      <IconButton
+        shape="round"
+        variant="ghost"
+        color="secondary"
+        icon={mdiCogOutline}
+        title={$t('options')}
+        onclick={() => (isShowOptions = !isShowOptions)}
+        aria-label={$t('options')}
+      />
     </HStack>
   {/snippet}
 
@@ -393,9 +401,12 @@
     synchronizeFavorites={isSynchronizeFavoritesActive}
     synchronizeArchives={isSynchronizeArchivesActive}
     onClose={() => (isShowOptions = false)}
-    onToggleSyncAlbum={() => (isSynchronizeAlbumsActive = !isSynchronizeAlbumsActive)}
-    onToggleSyncFavorites={() => (isSynchronizeFavoritesActive = !isSynchronizeFavoritesActive)}
-    onToggleSyncArchives={() => (isSynchronizeArchivesActive = !isSynchronizeArchivesActive)}
+    onSave={async (synchronizeAlbums, synchronizeArchives, synchronizeFavorites) => {
+      isSynchronizeAlbumsActive = synchronizeAlbums;
+      isSynchronizeFavoritesActive = synchronizeFavorites;
+      isSynchronizeArchivesActive = synchronizeArchives;
+      isShowOptions = false;
+    }}
   />
 {/if}
 
