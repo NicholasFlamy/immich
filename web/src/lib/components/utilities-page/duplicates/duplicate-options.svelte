@@ -1,7 +1,5 @@
 <script lang="ts">
-  import FullScreenModal from '$lib/components/shared-components/full-screen-modal.svelte';
-  import SettingSwitch from '$lib/components/shared-components/settings/setting-switch.svelte';
-  import { Switch, Field, Stack, Button } from '@immich/ui';
+  import { Button, Field, Modal, Stack, Switch } from '@immich/ui';
   import { t } from 'svelte-i18n';
 
   interface Props {
@@ -19,7 +17,7 @@
 </script>
 
 <form {onsubmit}>
-  <FullScreenModal title={$t('options')} width="auto" {onClose}>
+  <Modal title={$t('options')} size="full" {onClose}>
     <Stack gap={4}>
       <Field label={$t('synchronize_albums')}>
         <Switch bind:checked={synchronizeAlbums} />
@@ -32,9 +30,9 @@
       </Field>
     </Stack>
 
-    {#snippet stickyBottom()}
-      <Button color="secondary" shape="round" fullWidth onclick={onClose}>{$t('cancel')}</Button>
-      <Button type="submit" shape="round" fullWidth>{$t('save')}</Button>
-    {/snippet}
-  </FullScreenModal>
+    <!-- {#snippet stickyBottom()} -->
+    <Button color="secondary" shape="round" fullWidth onclick={onClose}>{$t('cancel')}</Button>
+    <Button type="submit" shape="round" fullWidth>{$t('save')}</Button>
+    <!-- {/snippet} -->
+  </Modal>
 </form>
